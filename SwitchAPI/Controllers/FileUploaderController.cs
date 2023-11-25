@@ -44,7 +44,7 @@ namespace SwitchAPI.Controllers
 
         [Route("UploadFile")]
         [HttpPost]
-        public async Task<IActionResult> UploadFile(IFormFile file)
+        public async Task<IActionResult> UploadFile(IFormFile file, [FromQuery] string CaptchaToken, [FromQuery] string CapcthaAnswer)
         {
             var collection = _mongoContext.GetCollection<FilesModel>("files");
 

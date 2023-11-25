@@ -1,3 +1,4 @@
+using SixLabors.ImageSharp.Processing;
 using SixLaborsCaptcha.Mvc.Core;
 using SwitchAPI.DB;
 using SwitchAPI.Models.Captcha;
@@ -16,6 +17,7 @@ builder.Services.AddSixLabCaptcha(x =>
 {
     x.NoiseRate = 12;
     x.DrawLines = 3;
+    
 
 });
 var app = builder.Build();

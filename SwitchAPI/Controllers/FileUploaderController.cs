@@ -46,42 +46,47 @@ namespace SwitchAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadFile(IFormFile file, [FromQuery] string CaptchaToken, [FromQuery] string CapcthaAnswer)
         {
-            var collection = _mongoContext.GetCollection<FilesModel>("files");
-
-            try
-            {
-
-                if (file != null && file.Length > 0)
+            var captcha = _captchaGenerator.Captchas.FirstOrDefault(c => c.CaptchaToken == CaptchaToken);
+                if (captcha != null && CapcthaAnswer == captcha.CaptchaAnswer)
                 {
-                    using (var memoryStream = new MemoryStream())
+                    var collection = _mongoContext.GetCollection<FilesModel>("files");
+
+                    try
                     {
-                        await file.CopyToAsync(memoryStream);
-                        byte[] fileBytes = memoryStream.ToArray();
-
-                        var fileModel = new FilesModel
+                        if (file != null && file.Length > 0)
                         {
-                            FileName = file.FileName,
-                            FileData = fileBytes
-                        };
+                            using (var memoryStream = new MemoryStream())
+                            {
+                                file.CopyTo(memoryStream);
+                                byte[] fileBytes = memoryStream.ToArray();
 
+                                var fileModel = new FilesModel
+                                {
+                                    FileName = file.FileName,
+                                    FileData = fileBytes
+                                };
 
-                        collection.InsertOneAsync(fileModel);
+                                collection.InsertOne(fileModel);
 
-                        return Ok($"File uploaded successfully." +
-                            $"FileName:{file.FileName}");
+                                return Ok($"File uploaded successfully. FileName: {file.FileName}");
+                            }
+                        }
+                        else
+                        {
+                            return BadRequest("File is empty or null.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(500, $"Internal server error: {ex}");
                     }
                 }
                 else
                 {
-                    return BadRequest("File is empty or null.");
+                    // مطابقت کپچا با تصویر نادرست است
+                    return BadRequest("Invalid Captcha. Please try again.");
                 }
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex}");
-            }
-
-        }
 
         [Route("DownloadFile")]
         [HttpGet]

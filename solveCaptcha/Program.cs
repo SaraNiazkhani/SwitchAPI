@@ -1,64 +1,90 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using SwitchAPI.Models.Captcha;
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading.Tasks;
 
 namespace ConcurrentTasksExample
 {
     class Program
     {
+        private static CaptchaGenerator _captchaGenerator;
         static async Task Main(string[] args)
         {
-            int answer = 123456; // مقدار ورودی
+            Thread thread1 = new Thread(CountUp);
+            Thread thread2 = new Thread(CountDown);
+            Thread thread3 = new Thread(CountUpAve);
+            Thread thread4 = new Thread(CountDownAve);
 
-            // شروع دو تسک به صورت همزمان
-            Task<int> decreaseTask = DecreaseNumberAsync(999999, answer);
-            Task<int> increaseTask = IncreaseNumberAsync(0, answer);
+            thread1.Start();
+            thread2.Start();
+            thread3.Start();
+            thread4.Start();
 
-            // انتظار برای اتمام هر دو تسک
-            int decreasedResult = await decreaseTask;
-            int increasedResult = await increaseTask;
-
-            Console.WriteLine($"تسک کاهش: {decreasedResult}");
-            Console.WriteLine($"تسک افزایش: {increasedResult}");
         }
-
-        static async Task<int> DecreaseNumberAsync(int number, int answer)
+        public static void CountDown()
         {
-            int result = 0;
-            while (number > 0)
+            for (int number = 999999; number >= 999999 / 2; number--)
             {
-                int digit = number % 10;
-                number /= 10;
-                result = result * 10 + (digit - 1);
-                await Task.Delay(100); // شبیه‌سازی عملیات طولانی مدت
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    Console.WriteLine($" Count Down {number}");
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("Count Down Ended!");
+              
             }
 
-            if (result == answer)
-                Console.WriteLine("تسک کاهش: مقدار مطابق است.");
-            else
-                Console.WriteLine("تسک کاهش: مقدار مطابق نیست.");
 
-            return result;
         }
-
-        static async Task<int> IncreaseNumberAsync(int number, int answer)
+        public static void CountUp()
         {
-            int result = 0;
-            while (number < 999999)
+            for (int number = 100000; number <= 999999 / 2; number++)
             {
-                int digit = number % 10;
-                number /= 10;
-                result = result * 10 + (digit + 1);
-                await Task.Delay(100); // شبیه‌سازی عملیات طولانی مدت
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    Console.WriteLine($" Count UP {number}");
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("Count Up Ended!");
+
             }
 
-            if (result == answer)
-                Console.WriteLine("تسک افزایش: مقدار مطابق است.");
-            else
-                Console.WriteLine("تسک افزایش: مقدار مطابق نیست.");
-
-            return result;
         }
+        public static void CountDownAve()
+        {
+            for (int number = 999999 / 2; number >= 100000; number--)
+            {
+                
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    Console.WriteLine($" Count Down Ave {number}");
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("Count Down Ave Ended!");
+            }
+
+
+        }
+        public static void CountUpAve()
+        {
+            for (int number = 999999 / 2; number <= 999999; number++)
+            {
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    Console.WriteLine($" Count Up Ave {number}");
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("Count Up Ave Ended!");
+              
+            }
+        }
+      
+     
     }
 }
 

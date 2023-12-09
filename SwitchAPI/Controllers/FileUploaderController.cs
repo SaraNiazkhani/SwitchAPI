@@ -7,6 +7,7 @@ using SixLaborsCaptcha.Core;
 using SwitchAPI.DB;
 using SwitchAPI.Models;
 using SwitchAPI.Models.Captcha;
+using System.Diagnostics.Metrics;
 
 namespace SwitchAPI.Controllers
 {
@@ -17,13 +18,13 @@ namespace SwitchAPI.Controllers
         private IMongoCollection<BsonDocument> _collection;
         private FileExtensionContentTypeProvider _contentTypeProvider;
         private MongoContext _mongoContext;
-        private CaptchaGenerator _captchaGenerator;
+        private static CaptchaGenerator _captchaGenerator;
         public FileUploaderController(MongoContext mongoContext, CaptchaGenerator captchaGenerator)
         {
             _mongoContext = mongoContext;
             _contentTypeProvider = new FileExtensionContentTypeProvider();
             _captchaGenerator = captchaGenerator;
-            _captchaGenerator = captchaGenerator;
+
         }
         [Route("GetCaptcha")]
         [HttpGet]
@@ -42,51 +43,131 @@ namespace SwitchAPI.Controllers
             return captcharesult;
         }
 
+        [Route("GuessCaptcha")]
+        [HttpGet]
+        public ActionResult<object> GuessCaptcha()
+        {
+            int number = 0;
+
+            Thread thread1 = new Thread(CountUp);
+            Thread thread2 = new Thread(CountDown);
+            Thread thread3 = new Thread(CountUpAve);
+            Thread thread4 = new Thread(CountDownAve);
+
+            thread1.Start();
+            thread2.Start();
+            thread3.Start();
+            thread4.Start();
+
+
+            return new { captchaKey=  number};
+        }
+        public static void CountDown()
+        {
+            for (int number = 999999; number >= 999999 / 2; number--)
+            {
+                System.Diagnostics.Debug.WriteLine($" Count Down {number}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    System.Diagnostics.Debug.WriteLine("Count Down Ended due to matching CaptchaToken!");
+                    break;
+                }
+
+                Task.Delay(10).Wait();
+            }
+
+
+        }
+        public static void CountUp()
+        {
+            for (int number = 100000; number <= 999999 / 2; number++)
+            {
+                System.Diagnostics.Debug.WriteLine($" Count Up {number}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    System.Diagnostics.Debug.WriteLine("Count Up Ended due to matching CaptchaToken!");
+                    break;
+                }
+
+                Task.Delay(10).Wait();
+            }
+
+        }
+        public static void CountDownAve()
+        {
+            for (int number = 999999 / 2; number >= 100000; number--)
+            {
+                System.Diagnostics.Debug.WriteLine($" Count Down Ave {number}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    System.Diagnostics.Debug.WriteLine("Count Down Ave Ended due to matching CaptchaToken!");
+                    break;
+                }
+
+                Task.Delay(10).Wait();
+            }
+
+
+        }
+        public static void CountUpAve()
+        {
+            for (int number = 999999 / 2; number <= 999999; number++)
+            {
+                System.Diagnostics.Debug.WriteLine($" Count Up Ave {number}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                {
+                    System.Diagnostics.Debug.WriteLine("Count Up Ave Ended due to matching CaptchaToken!");
+                    break;
+                }
+
+                Task.Delay(10).Wait();
+            }
+        }
         [Route("UploadFile")]
         [HttpPost]
         public async Task<IActionResult> UploadFile(IFormFile file, [FromQuery] string CaptchaToken, [FromQuery] string CapcthaAnswer)
         {
             var captcha = _captchaGenerator.Captchas.FirstOrDefault(c => c.CaptchaToken == CaptchaToken);
-                if (captcha != null && CapcthaAnswer == captcha.CaptchaAnswer)
+            if (captcha != null && CapcthaAnswer == captcha.CaptchaAnswer)
+            {
+                var collection = _mongoContext.GetCollection<FilesModel>("files");
+
+                try
                 {
-                    var collection = _mongoContext.GetCollection<FilesModel>("files");
-
-                    try
+                    if (file != null && file.Length > 0)
                     {
-                        if (file != null && file.Length > 0)
+                        using (var memoryStream = new MemoryStream())
                         {
-                            using (var memoryStream = new MemoryStream())
+                            file.CopyTo(memoryStream);
+                            byte[] fileBytes = memoryStream.ToArray();
+
+                            var fileModel = new FilesModel
                             {
-                                file.CopyTo(memoryStream);
-                                byte[] fileBytes = memoryStream.ToArray();
+                                FileName = file.FileName,
+                                FileData = fileBytes
+                            };
 
-                                var fileModel = new FilesModel
-                                {
-                                    FileName = file.FileName,
-                                    FileData = fileBytes
-                                };
+                            collection.InsertOne(fileModel);
 
-                                collection.InsertOne(fileModel);
-
-                                return Ok($"File uploaded successfully. FileName: {file.FileName}");
-                            }
-                        }
-                        else
-                        {
-                            return BadRequest("File is empty or null.");
+                            return Ok($"File uploaded successfully. FileName: {file.FileName}");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        return StatusCode(500, $"Internal server error: {ex}");
+                        return BadRequest("File is empty or null.");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    // مطابقت کپچا با تصویر نادرست است
-                    return BadRequest("Invalid Captcha. Please try again.");
+                    return StatusCode(500, $"Internal server error: {ex}");
                 }
             }
+            else
+            {
+                // مطابقت کپچا با تصویر نادرست است
+                return BadRequest("Invalid Captcha. Please try again.");
+            }
+        }
 
         [Route("DownloadFile")]
         [HttpGet]

@@ -13,6 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton(new MongoContext("mongodb://127.0.0.1:27017", "Switch"));
 builder.Services.AddSingleton<CaptchaGenerator>();
+builder.Services.AddSingleton<CaptchaService>();
 builder.Services.AddSixLabCaptcha(x =>
 {
     x.NoiseRate = 12;

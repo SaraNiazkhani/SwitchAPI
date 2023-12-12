@@ -8,6 +8,7 @@ using SwitchAPI.DB;
 using SwitchAPI.Models;
 using SwitchAPI.Models.Captcha;
 using System.Diagnostics.Metrics;
+using System.Threading.Tasks;
 
 namespace SwitchAPI.Controllers
 {
@@ -48,28 +49,36 @@ namespace SwitchAPI.Controllers
         public ActionResult<object> GuessCaptcha()
         {
             int number = 0;
-
-            Thread thread1 = new Thread(CountUp);
-            Thread thread2 = new Thread(CountDown);
-            Thread thread3 = new Thread(CountUpAve);
-            Thread thread4 = new Thread(CountDownAve);
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            Thread thread1 = new Thread(() => CountUp(ref number, cancellationTokenSource));
+            Thread thread2 = new Thread(() => CountDown(ref number, cancellationTokenSource));
+            Thread thread3 = new Thread(() => CountUpAve(ref number, cancellationTokenSource));
+            Thread thread4 = new Thread(() => CountDownAve(ref number, cancellationTokenSource));
+            //Thread thread1 = new Thread(CountUp);
+            //Thread thread2 = new Thread(CountDown);
+            //Thread thread3 = new Thread(CountUpAve);
+            //Thread thread4 = new Thread(CountDownAve);
 
             thread1.Start();
             thread2.Start();
             thread3.Start();
             thread4.Start();
-
+            thread1.Join();
+            thread2.Join();
+            thread3.Join();
+            thread4.Join();
 
             return new { captchaKey=  number};
         }
-        public static void CountDown()
+        public static void CountDown(ref int number, CancellationTokenSource cancellationTokenSource)
         {
-            for (int number = 999999; number >= 999999 / 2; number--)
+            for (int num = 999999; num >= 999999 / 2; num--)
             {
-                System.Diagnostics.Debug.WriteLine($" Count Down {number}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                System.Diagnostics.Debug.WriteLine($" Count Down {num}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == num))
                 {
                     System.Diagnostics.Debug.WriteLine("Count Down Ended due to matching CaptchaToken!");
+                    cancellationTokenSource.Cancel();
                     break;
                 }
 
@@ -78,14 +87,15 @@ namespace SwitchAPI.Controllers
 
 
         }
-        public static void CountUp()
+        public static void CountUp(ref int number, CancellationTokenSource cancellationTokenSource)
         {
-            for (int number = 100000; number <= 999999 / 2; number++)
+            for (int num = 100000; num <= 999999 / 2; num++)
             {
-                System.Diagnostics.Debug.WriteLine($" Count Up {number}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                System.Diagnostics.Debug.WriteLine($" Count Up {num}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == num))
                 {
                     System.Diagnostics.Debug.WriteLine("Count Up Ended due to matching CaptchaToken!");
+                    cancellationTokenSource.Cancel();
                     break;
                 }
 
@@ -93,14 +103,15 @@ namespace SwitchAPI.Controllers
             }
 
         }
-        public static void CountDownAve()
+        public static void CountDownAve(ref int number, CancellationTokenSource cancellationTokenSource)
         {
-            for (int number = 999999 / 2; number >= 100000; number--)
+            for (int num = 999999 / 2; num >= 100000; num--)
             {
-                System.Diagnostics.Debug.WriteLine($" Count Down Ave {number}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                System.Diagnostics.Debug.WriteLine($" Count Down Ave {num   }");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == num))
                 {
                     System.Diagnostics.Debug.WriteLine("Count Down Ave Ended due to matching CaptchaToken!");
+                    cancellationTokenSource.Cancel();
                     break;
                 }
 
@@ -109,14 +120,15 @@ namespace SwitchAPI.Controllers
 
 
         }
-        public static void CountUpAve()
+        public static void CountUpAve(ref int number, CancellationTokenSource cancellationTokenSource)
         {
-            for (int number = 999999 / 2; number <= 999999; number++)
+            for (int num = 999999 / 2; num <= 999999; num++)
             {
-                System.Diagnostics.Debug.WriteLine($" Count Up Ave {number}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == number))
+                System.Diagnostics.Debug.WriteLine($" Count Up Ave {num}");
+                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaToken, out int token) && token == num))
                 {
                     System.Diagnostics.Debug.WriteLine("Count Up Ave Ended due to matching CaptchaToken!");
+                    cancellationTokenSource.Cancel();
                     break;
                 }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using SixLaborsCaptcha.Core;
 using SwitchAPI.DB;
 using SwitchAPI.Models.Captcha;
+using System.Threading;
 
 namespace SwitchAPI.Controllers
 {
@@ -12,6 +13,8 @@ namespace SwitchAPI.Controllers
     public class CaptchaController : ControllerBase
     {
         private static CaptchaGenerator _captchaGenerator;
+
+
         public CaptchaController(CaptchaGenerator captchaGenerator)
         {
 
@@ -37,391 +40,665 @@ namespace SwitchAPI.Controllers
         }
 
 
-        [Route("GuessCaptcha")]
+
+        [Route("CheckNumbers")]
         [HttpGet]
-        public ActionResult<object> GuessCaptcha()
+        public async Task<ActionResult<object>> CheckNumbers()
         {
             var numberContainer = new GuessCaptcha();
             numberContainer.Number = 0;
-            int number = 0;
-            CancellationTokenSource globalCancellationTokenSource = new CancellationTokenSource();
 
-            CancellationToken globalCancellationToken = globalCancellationTokenSource.Token;
+            List<Task> tasks = new List<Task>();
 
-            List<Thread> threads = new List<Thread>();
+            tasks.Add(DecreaseTo77Async(numberContainer));
+            tasks.Add(IncreaseTo77Async(numberContainer));
 
-            Thread thread1 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up");
-            Thread thread2 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down");
-            Thread thread3 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 999999, "Count Up Ave");
-            Thread thread4 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 100000, "Count Down Ave");
-            Thread thread5 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 100000, "Count Down Ave+");
-            Thread thread6 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 999999 / 2, "Count Up Ave+");
-            Thread thread7 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999, "Count Up Ave++");
-            Thread thread8 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999 / 2, "Count Down Ave++");
+            // انتظار اجرای تمام تسک‌ها
+            await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite));
 
-            threads.Add(thread1);
-            threads.Add(thread2);
-            threads.Add(thread3);
-            threads.Add(thread4);
-            threads.Add(thread5);
-            threads.Add(thread6);
-            threads.Add(thread7);
-            threads.Add(thread8);
-
-            foreach (var thread in threads)
-            {
-                thread.Join();
-            }
-
-            globalCancellationTokenSource.Cancel(); // متوقف کردن تمام تردها
-
-            return new { captchaKey = numberContainer.Number };
+            return new { Result = numberContainer.Number == 77, Value = numberContainer.Number };
         }
 
-
-
-        public static Thread CreateAndStartThreadUp(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+        public async Task DecreaseTo77Async(GuessCaptcha numberContainer)
         {
-            Thread thread = new Thread(() => CountUpInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
-            thread.Start();
-            return thread;
-        }
-        public static Thread CreateAndStartThreadDown(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        {
-            Thread thread = new Thread(() => CountDownInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
-            thread.Start();
-            return thread;
-        }
-
-        public static void CountUpInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        {
-            if (numberContainer.Number != 0)
+            for (int num = 50; num >= 0; num--)
             {
-                return;
-            }
+                await Task.Delay(10);
 
-            for (int num = start; num <= end; num++)
-            {
-                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+                lock (numberContainer)
                 {
-                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-                    lock (globalCancellationTokenSource)
+                    if (numberContainer.Number == 77)
                     {
-                        if (numberContainer.Number == 0)
-                        {
-                            numberContainer.Number = num;
-                            globalCancellationTokenSource.Cancel();
-                        }
+                        return;
                     }
-                    return;
-                }
-
-                Task.Delay(10).Wait();
-
-                if (globalCancellationToken.IsCancellationRequested)
-                {
-                    return;
+                    numberContainer.Number = num;
                 }
             }
         }
-        public static void CountDownInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+
+        public async Task IncreaseTo77Async(GuessCaptcha numberContainer)
         {
-            if (numberContainer.Number != 0)
+            for (int num = 50; num <= 77; num++)
             {
-                return;
-            }
+                await Task.Delay(10);
 
-            for (int num = start; num >= end; num--)
-            {
-                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+                lock (numberContainer)
                 {
-                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-                    lock (globalCancellationTokenSource)
+                    if (numberContainer.Number == 77)
                     {
-                        if (numberContainer.Number == 0)
-                        {
-                            numberContainer.Number = num;
-                            globalCancellationTokenSource.Cancel();
-                        }
+                        return;
                     }
-                    return;
-                }
-
-                Task.Delay(10).Wait();
-
-                if (globalCancellationToken.IsCancellationRequested)
-                {
-                    return;
+                    numberContainer.Number = num;
                 }
             }
         }
+
+
     }
 }
-
 //        [Route("GuessCaptcha")]
 //        [HttpGet]
-//        public ActionResult<object> GuessCaptcha()
+//        public async Task<ActionResult<object>> GuessCaptcha()
 //        {
-//            int number = 0;
-//            CancellationTokenSource globalCancellationTokenSource = new CancellationTokenSource();
+//            var numberContainer = new GuessCaptcha();
+//            numberContainer.Number = 0;
 
-//            CancellationToken globalCancellationToken = globalCancellationTokenSource.Token;
+//            List<Task> tasks = new List<Task>();
 
-//            Thread thread1 = new Thread(() => CountUp(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread2 = new Thread(() => CountDown(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread3 = new Thread(() => CountUpAve(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread4 = new Thread(() => CountDownAve(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread5 = new Thread(() => CountUpAver(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread6 = new Thread(() => CountDownAver(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread7 = new Thread(() => UpAve(ref number, globalCancellationToken, globalCancellationTokenSource));
-//            Thread thread8 = new Thread(() => DownAve(ref number, globalCancellationToken, globalCancellationTokenSource));
+//            tasks.Add(CountUpAsync(numberContainer));
+//            tasks.Add(CountDownAsync(numberContainer));
 
+//            // انتظار اجرای تمام تسک‌ها
+//            await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite));
 
-//            thread1.Start();
-//            thread2.Start();
-//            thread3.Start();
-//            thread4.Start();
-//            thread5.Start();
-//            thread6.Start();
-//            thread7.Start();
-//            thread8.Start();
-
-//            thread1.Join();
-//            thread2.Join();
-//            thread3.Join();
-//            thread4.Join();
-//            thread5.Join();
-//            thread6.Join();
-//            thread7.Join();
-//            thread8.Join();
-
-
-
-//            globalCancellationTokenSource.Cancel(); // متوقف کردن تمام تردها
-
-//            return new { captchaKey = number };
-//        }
-//        public static void CountUp(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountUpInRange(ref number, 100000, 999999 / 2, "Count Up", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void CountUpAve(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountUpInRange(ref number, 999999 / 2, 999999, "Count Up Ave", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void CountDown(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountDownInRange(ref number, 999999, 999999 / 2, "Count Down", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void CountDownAve(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountDownInRange(ref number, 999999 / 2, 100000, "Count Down Ave", globalCancellationToken, globalCancellationTokenSource);
+//            return new { captchaKey = numberContainer.Number };
 //        }
 
-//        public static void CountDownAver(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
+//        public async Task CountUpAsync(GuessCaptcha numberContainer)
 //        {
-//            CountDownInRange(ref number, 499999 / 2, 100000, "Count Down Ave+", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void CountUpAver(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountUpInRange(ref number, 499999 / 2, 999999 / 2, "Count Up Ave+", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void UpAve(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountUpInRange(ref number, 749998, 999999, "Count Up Ave++", globalCancellationToken, globalCancellationTokenSource);
-//        }
-//        public static void DownAve(ref int number, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            CountDownInRange(ref number, 749998, 999999 / 2, "Count Down Ave++", globalCancellationToken, globalCancellationTokenSource);
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = 100000; num <= 999999 / 2; num++)
+//            {
+//                if (await CheckCaptchaAsync(num, numberContainer))
+//                {
+//                    return;
+//                }
+
+//                await Task.Delay(10);
+//            }
 //        }
 
-
-//        public static void CountUpInRange(ref int number, int start, int end, string debugMessage, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
+//        public async Task CountDownAsync(GuessCaptcha numberContainer)
 //        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = 999999; num >= 999999 / 2; num--)
+//            {
+//                if (await CheckCaptchaAsync(num, numberContainer))
+//                {
+//                    return;
+//                }
+
+//                await Task.Delay(10);
+//            }
+//        }
+
+//        public async Task<bool> CheckCaptchaAsync(int num, GuessCaptcha numberContainer)
+//        {
+//            if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//            {
+//                lock (numberContainer)
+//                {
+//                    if (numberContainer.Number == 0)
+//                    {
+//                        numberContainer.Number = num;
+//                    }
+//                }
+//                return true;
+//            }
+
+//            await Task.Delay(10);
+
+//            return false;
+//        }
+//    }
+//}
+
+
+//        public async Task <object> GuessCaptchaAsync()
+//        {
+//            var globalCancellationTokenSource = new CancellationTokenSource();
+
+//            // ایجاد یک نمونه جدید از کلاس GuessCaptcha
+//            var numberContainer = new GuessCaptcha();
+
+//            // ایجاد یک نمونه جدید از CancellationTokenSource
+//            var globalCancellationToken = globalCancellationTokenSource.Token;
+
+//            await CountUpInRangeAsync(numberContainer, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up");
+//            await CountDownInRangeAsync(numberContainer, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down");
+
+//            globalCancellationTokenSource.Cancel(); // Cancel all tasks
+
+//            return new { captchaKey = numberContainer.Number };
+//        }
+
+//        public async Task CountUpInRangeAsync(GuessCaptcha numberContainer, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
 //            for (int num = start; num <= end; num++)
 //            {
 //                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
 //                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
 //                {
 //                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-//                    number = num;
-//                    globalCancellationTokenSource.Cancel();
-//                    return;
-//                }
-
-//                Task.Delay(10).Wait();
-
-//                if (globalCancellationToken.IsCancellationRequested)
-//                {
-//                    return;
-//                }
-//            }
-//        }
-
-//        public static void CountDownInRange(ref int number, int start, int end, string debugMessage, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource)
-//        {
-//            for (int num = start; num >= end; num--)
-//            {
-//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
-//                {
-//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-//                    number = num;
-//                    globalCancellationTokenSource.Cancel();
-//                    return;
-//                }
-
-//                Task.Delay(10).Wait();
-
-//                if (globalCancellationToken.IsCancellationRequested)
-//                {
-//                    return;
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//**********************************************************************************
-
-//public ActionResult<object> GuessCaptcha()
-//{
-//    int number = 0;
-//    bool answerFound = false;
-//    object lockObject = new object();
-//    CancellationTokenSource cts = new CancellationTokenSource();
-//    //CancellationTokenSource cts1 = new CancellationTokenSource();
-//    //CancellationTokenSource cts2 = new CancellationTokenSource();
-//    //CancellationTokenSource cts3 = new CancellationTokenSource();
-//    //CancellationTokenSource cts4 = new CancellationTokenSource();
-//    Thread thread1 = new Thread(() => CountUp(ref number, cts, ref answerFound, lockObject));
-//    Thread thread2 = new Thread(() => CountDown(ref number, cts, ref answerFound, lockObject));
-//    Thread thread3 = new Thread(() => CountUpAve(ref number, cts, ref answerFound, lockObject));
-//    Thread thread4 = new Thread(() => CountDownAve(ref number, cts, ref answerFound, lockObject));
-//    Thread thread5 = new Thread(() => CountUpAver(ref number, cts, ref answerFound, lockObject));
-//    Thread thread6 = new Thread(() => CountDownAver(ref number, cts, ref answerFound, lockObject));
-//    Thread thread7 = new Thread(() => UpAve(ref number, cts, ref answerFound, lockObject));
-//    Thread thread8 = new Thread(() => DownAve(ref number, cts, ref answerFound, lockObject));
-//    thread1.Start();
-//    thread2.Start();
-//    thread3.Start();
-//    thread4.Start();
-//    thread5.Start();
-//    thread6.Start();
-//    thread7.Start();
-//    thread8.Start();
-
-//    thread1.Join();
-//    thread2.Join();
-//    thread3.Join();
-//    thread4.Join();
-//    thread5.Join();
-//    thread6.Join();
-//    thread7.Join();
-//    thread8.Join();
-//    return new { captchaKey = number };
-//}
-
-//public static void CountUp(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountUpInRange(ref number, cancellationTokenSource, 100000, 999999 / 2, "Count Up", ref answerFound, lockObject);
-//}
-//public static void CountDown(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountDownInRange(ref number, cancellationTokenSource, 999999, 999999 / 2, "Count Down", ref answerFound, lockObject);
-//}
-//public static void CountDownAve(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountDownInRange(ref number, cancellationTokenSource, 999999 / 2, 100000, "Count Down Ave", ref answerFound, lockObject);
-//}
-
-//public static void CountDownAver(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountDownInRange(ref number, cancellationTokenSource, 499999 / 2, 100000, "Count Down Ave+", ref answerFound, lockObject);
-//}
-//public static void CountUpAver(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountUpInRange(ref number, cancellationTokenSource, 499999 / 2, 999999 / 2, "Count Up Ave+", ref answerFound, lockObject);
-//}
-//public static void UpAve(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountUpInRange(ref number, cancellationTokenSource, 749998, 999999, "Count Up Ave++", ref answerFound, lockObject);
-//}
-//public static void DownAve(ref int number, CancellationTokenSource cancellationTokenSource, ref bool answerFound, object lockObject)
-//{
-//    CountDownInRange(ref number, cancellationTokenSource, 749998, 999999 / 2, "Count Down Ave++", ref answerFound, lockObject);
-//}
-//*******************************************************************************
-//***************************************************************************************************
-//public static void CountUpInRange(ref int number, CancellationTokenSource cancellationTokenSource, int start, int end, string debugMessage, ref bool answerFound, object lockObject)
-//{
-//    for (int num = start; num <= end; num++)
-//    {
-//        System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-//        if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
-//        {
-//            lock (lockObject)
-//            {
-//                if (!answerFound)
-//                {
-//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-//                    cancellationTokenSource.Cancel();
-//                    answerFound = true;
-//                    return;
-//                }
-//            }
-//        }
-
-//        Task.Delay(10).Wait();
-//    }
-//}
-//************************************************************************************************
-//        public static void CountDownInRange(ref int number, CancellationTokenSource cancellationTokenSource, int start, int end, string debugMessage, ref bool answerFound, object lockObject)
-//        {
-//            for (int num = start; num >= end; num--)
-//            {
-//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
-//                {
-//                    lock (lockObject)
+//                    lock (globalCancellationTokenSource)
 //                    {
-//                        if (!answerFound)
+//                        if (numberContainer.Number == 0)
 //                        {
-//                            System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-//                            cancellationTokenSource.Cancel();
-//                            answerFound = true;
-//                            return;
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
 //                        }
 //                    }
+//                    return;
 //                }
 
-//                Task.Delay(10).Wait();
+//                await Task.Delay(10);
+
+//                if (globalCancellationTokenSource.Token.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+
+//        public async Task CountDownInRangeAsync(GuessCaptcha numberContainer, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = start; num >= end; num--)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
+
+//                await Task.Delay(10);
+
+//                if (globalCancellationTokenSource.Token.IsCancellationRequested)
+//                {
+//                    return;
+//                }
 //            }
 //        }
 //    }
+//}
 
+//    [Route("GuessCaptcha")]
+//        [HttpGet]
+//        public async Task<ActionResult<object>> GuessCaptchaAsync()
+//        {
+//            var numberContainer = new GuessCaptcha();
+//            numberContainer.Number = 0;
+
+//            var globalCancellationTokenSource = new CancellationTokenSource();
+//            var globalCancellationToken = globalCancellationTokenSource.Token;
+
+//            List<Task> tasks = new List<Task>();
+
+//            tasks.Add(CountUpInRangeAsync(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up"));
+//            tasks.Add(CountDownInRangeAsync(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down"));
+//            // Add other tasks as needed...
+
+//            await Task.WhenAny(tasks); // Wait for any of the tasks to complete
+
+//            globalCancellationTokenSource.Cancel(); // Cancel all tasks
+
+//            return new { captchaKey = numberContainer.Number };
+//        }
+
+//        public async Task CountUpInRangeAsync(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = start; num <= end; num++)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
+
+//                await Task.Delay(10);
+
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+
+//        public async Task CountDownInRangeAsync(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = start; num >= end; num--)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
+
+//                await Task.Delay(10);
+
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+//    }
+//}
+    //[Route("GuessCaptcha")]
+    //    [HttpGet]
+    //    public async Task<ActionResult<object>> GuessCaptcha()
+    //    {
+    //        var numberContainer = new GuessCaptcha();
+    //        numberContainer.Number = 0;
+
+
+    //        var cancellationTokenSource = new CancellationTokenSource();
+    //        CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+    //        var tasks = new List<Task>();
+
+
+
+    //        tasks.Add(Task.Run(() => CountUpInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 100000, 999999 / 2, "Count Up")));
+    //        tasks.Add(Task.Run(() => CountDownInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 999999, 999999 / 2, "Count Down")));
+    //        tasks.Add(Task.Run(() => CountUpInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 999999 / 2, 999999, "Count Up Ave")));
+    //        tasks.Add(Task.Run(() => CountDownInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 2, 100000, "Count Down Ave")));
+    //        tasks.Add(Task.Run(() => CountUpInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 499999 / 2, 100000, "Count Down Ave+")));
+    //        tasks.Add(Task.Run(() => CountDownInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 499999 / 2, 999999 / 2, "Count Up Ave+")));
+    //        tasks.Add(Task.Run(() => CountUpInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 749998, 999999, "Count Up Ave++")));
+    //        tasks.Add(Task.Run(() => CountDownInRangeAsync(numberContainer, cancellationTokenSource, cancellationToken, 749998, 999999 / 2, "Count Down Ave++")));
+
+    //        await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(TimeSpan.FromSeconds(30))); // Set a timeout for completion
+
+    //        cancellationTokenSource.Cancel(); // Cancel remaining tasks
+
+    //        return new { captchaKey = numberContainer.Number };
+    //    }
+
+
+    //    public async Task CountUpInRangeAsync(GuessCaptcha numberContainer, CancellationTokenSource cancellationTokenSource, CancellationToken cancellationToken, int start, int end, string debugMessage)
+    //    {
+    //        if (numberContainer.Number != 0)
+    //        {
+    //            cancellationTokenSource.Cancel();
+    //            return;
+    //        }
+
+    //        for (int num = start; num <= end; num++)
+    //        {
+    //            // ... 
+    //            if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+    //            {
+    //                // ... Found the number
+    //                lock (cancellationTokenSource)
+    //                {
+    //                    if (numberContainer.Number == 0)
+    //                    {
+    //                        numberContainer.Number = num;
+    //                        cancellationTokenSource.Cancel();
+    //                    }
+    //                }
+    //                return;
+    //            }
+    //            // ...
+    //        }
+    //    }
+
+    //    public async Task CountDownInRangeAsync(GuessCaptcha numberContainer, CancellationTokenSource cancellationTokenSource, CancellationToken cancellationToken, int start, int end, string debugMessage)
+    //    {
+    //        if (numberContainer.Number != 0)
+    //        {
+    //            cancellationTokenSource.Cancel();
+    //            return;
+    //        }
+
+    //        for (int num = start; num >= end; num--)
+    //        {
+    //            // ... 
+    //            if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+    //            {
+    //                // ... Found the number
+    //                lock (cancellationTokenSource)
+    //                {
+    //                    if (numberContainer.Number == 0)
+    //                    {
+    //                        numberContainer.Number = num;
+    //                        cancellationTokenSource.Cancel();
+    //                    }
+    //                }
+    //                return;
+    //            }
+    //            // ...
+    //        }
+    //    }
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //    [Route("GuessCaptcha")]
+        //    [HttpGet]
+        //    public async Task<ActionResult<object>> GuessCaptchaAsync()
+        //    {
+        //        var numberContainer = new GuessCaptcha();
+        //        numberContainer.Number = 0;
+
+        //        var globalCancellationTokenSource = new CancellationTokenSource();
+        //        var globalCancellationToken = globalCancellationTokenSource.Token;
+
+        //        List<Task> tasks = new List<Task>();
+
+        //        tasks.Add(CountUpInRangeAsync(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up"));
+        //        tasks.Add(CountDownInRangeAsync(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down"));
+        //        // Add other tasks as needed...
+
+        //        await Task.WhenAny(tasks); // Wait for any of the tasks to complete
+
+        //        globalCancellationTokenSource.Cancel(); // Cancel all tasks
+
+        //        return new { captchaKey = numberContainer.Number };
+        //    }
+
+        //    public async Task CountUpInRangeAsync(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+        //    {
+        //        if (numberContainer.Number != 0)
+        //        {
+        //            return;
+        //        }
+
+        //        for (int num = start; num <= end; num++)
+        //        {
+        //            System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+        //            if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+        //            {
+        //                System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+        //                lock (globalCancellationTokenSource)
+        //                {
+        //                    if (numberContainer.Number == 0)
+        //                    {
+        //                        numberContainer.Number = num;
+        //                        globalCancellationTokenSource.Cancel();
+        //                    }
+        //                }
+        //                return;
+        //            }
+
+        //            await Task.Delay(10);
+
+        //            if (globalCancellationToken.IsCancellationRequested)
+        //            {
+        //                return;
+        //            }
+        //        }
+        //    }
+
+        //    public async Task CountDownInRangeAsync(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+        //    {
+        //        if (numberContainer.Number != 0)
+        //        {
+        //            return;
+        //        }
+
+        //        for (int num = start; num >= end; num--)
+        //        {
+        //            System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+        //            if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+        //            {
+        //                System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+        //                lock (globalCancellationTokenSource)
+        //                {
+        //                    if (numberContainer.Number == 0)
+        //                    {
+        //                        numberContainer.Number = num;
+        //                        globalCancellationTokenSource.Cancel();
+        //                    }
+        //                }
+        //                return;
+        //            }
+
+        //            await Task.Delay(10);
+
+        //            if (globalCancellationToken.IsCancellationRequested)
+        //            {
+        //                return;
+        //            }
+        //        }
+        //    }
+        //}
+
+
+
+
+
+
+
+
+
+
+
+//        [Route("GuessCaptcha")]
+//        [HttpGet]
+//        public ActionResult<object> GuessCaptcha()
+//        {
+//            var numberContainer = new GuessCaptcha();
+//            numberContainer.Number = 0;
+//            int number = 0;
+//            CancellationTokenSource globalCancellationTokenSource = new CancellationTokenSource();
+
+//            CancellationToken globalCancellationToken = globalCancellationTokenSource.Token;
+
+//            List<Thread> threads = new List<Thread>();
+
+//            Thread thread1 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up");
+//            Thread thread2 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down");
+//            Thread thread3 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 999999, "Count Up Ave");
+//            Thread thread4 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 100000, "Count Down Ave");
+//            Thread thread5 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 100000, "Count Down Ave+");
+//            Thread thread6 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 999999 / 2, "Count Up Ave+");
+//            Thread thread7 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999, "Count Up Ave++");
+//            Thread thread8 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999 / 2, "Count Down Ave++");
+
+//            threads.Add(thread1);
+//            threads.Add(thread2);
+//            threads.Add(thread3);
+//            threads.Add(thread4);
+//            threads.Add(thread5);
+//            threads.Add(thread6);
+//            threads.Add(thread7);
+//            threads.Add(thread8);
+
+//            foreach (var thread in threads)
+//            {
+//                thread.Join();
+//            }
+
+//            globalCancellationTokenSource.Cancel(); // متوقف کردن تمام تردها
+
+//            return new { captchaKey = numberContainer.Number };
+//        }
+
+//        public static Thread CreateAndStartThreadUp(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            Thread thread = new Thread(() => CountUpInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
+//            thread.Start();
+//            return thread;
+//        }
+//        public static Thread CreateAndStartThreadDown(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            Thread thread = new Thread(() => CountDownInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
+//            thread.Start();
+//            return thread;
+//        }
+
+
+
+//        public static void CountUpInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = start; num <= end; num++)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
+
+//                Task.Delay(10).Wait();
+
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+//        public static void CountDownInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
+
+//            for (int num = start; num >= end; num--)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
+
+//                Task.Delay(10).Wait();
+
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+//    }
 //}

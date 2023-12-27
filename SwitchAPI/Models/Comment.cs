@@ -5,11 +5,11 @@ namespace SwitchAPI.Models
 {
     public class Comment
     {  //    [Route("GuessCaptcha")]
-       //    [HttpGet]
-       //    public async Task<ActionResult<object>> GuessCaptchaAsync()
-       //    {
-       //        var numberContainer = new GuessCaptcha();
-       //        numberContainer.Number = 0;
+        //    [HttpGet]
+        //    public async Task<ActionResult<object>> GuessCaptchaAsync()
+        //    {
+        //        var numberContainer = new GuessCaptcha();
+        //        numberContainer.Number = 0;
 
         //        var globalCancellationTokenSource = new CancellationTokenSource();
         //        var globalCancellationToken = globalCancellationTokenSource.Token;
@@ -104,128 +104,128 @@ namespace SwitchAPI.Models
 
 
 
-        //        [Route("GuessCaptcha")]
-        //        [HttpGet]
-        //        public ActionResult<object> GuessCaptcha()
-        //        {
-        //            var numberContainer = new GuessCaptcha();
-        //            numberContainer.Number = 0;
-        //            int number = 0;
-        //            CancellationTokenSource globalCancellationTokenSource = new CancellationTokenSource();
+//        [Route("GuessCaptcha")]
+//        [HttpGet]
+//        public ActionResult<object> GuessCaptcha()
+//        {
+//            var numberContainer = new GuessCaptcha();
+//            numberContainer.Number = 0;
+//            int number = 0;
+//            CancellationTokenSource globalCancellationTokenSource = new CancellationTokenSource();
 
-        //            CancellationToken globalCancellationToken = globalCancellationTokenSource.Token;
+//            CancellationToken globalCancellationToken = globalCancellationTokenSource.Token;
 
-        //            List<Thread> threads = new List<Thread>();
+//            List<Thread> threads = new List<Thread>();
 
-        //            Thread thread1 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up");
-        //            Thread thread2 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down");
-        //            Thread thread3 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 999999, "Count Up Ave");
-        //            Thread thread4 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 100000, "Count Down Ave");
-        //            Thread thread5 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 100000, "Count Down Ave+");
-        //            Thread thread6 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 999999 / 2, "Count Up Ave+");
-        //            Thread thread7 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999, "Count Up Ave++");
-        //            Thread thread8 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999 / 2, "Count Down Ave++");
+//            Thread thread1 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 100000, 999999 / 2, "Count Up");
+//            Thread thread2 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999, 999999 / 2, "Count Down");
+//            Thread thread3 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 999999, "Count Up Ave");
+//            Thread thread4 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 999999 / 2, 100000, "Count Down Ave");
+//            Thread thread5 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 100000, "Count Down Ave+");
+//            Thread thread6 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 499999 / 2, 999999 / 2, "Count Up Ave+");
+//            Thread thread7 = CreateAndStartThreadUp(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999, "Count Up Ave++");
+//            Thread thread8 = CreateAndStartThreadDown(numberContainer, globalCancellationToken, globalCancellationTokenSource, 749998, 999999 / 2, "Count Down Ave++");
 
-        //            threads.Add(thread1);
-        //            threads.Add(thread2);
-        //            threads.Add(thread3);
-        //            threads.Add(thread4);
-        //            threads.Add(thread5);
-        //            threads.Add(thread6);
-        //            threads.Add(thread7);
-        //            threads.Add(thread8);
+//            threads.Add(thread1);
+//            threads.Add(thread2);
+//            threads.Add(thread3);
+//            threads.Add(thread4);
+//            threads.Add(thread5);
+//            threads.Add(thread6);
+//            threads.Add(thread7);
+//            threads.Add(thread8);
 
-        //            foreach (var thread in threads)
-        //            {
-        //                thread.Join();
-        //            }
+//            foreach (var thread in threads)
+//            {
+//                thread.Join();
+//            }
 
-        //            globalCancellationTokenSource.Cancel(); // متوقف کردن تمام تردها
+//            globalCancellationTokenSource.Cancel(); // متوقف کردن تمام تردها
 
-        //            return new { captchaKey = numberContainer.Number };
-        //        }
+//            return new { captchaKey = numberContainer.Number };
+//        }
 
-        //        public static Thread CreateAndStartThreadUp(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        //        {
-        //            Thread thread = new Thread(() => CountUpInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
-        //            thread.Start();
-        //            return thread;
-        //        }
-        //        public static Thread CreateAndStartThreadDown(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        //        {
-        //            Thread thread = new Thread(() => CountDownInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
-        //            thread.Start();
-        //            return thread;
-        //        }
+//        public static Thread CreateAndStartThreadUp(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            Thread thread = new Thread(() => CountUpInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
+//            thread.Start();
+//            return thread;
+//        }
+//        public static Thread CreateAndStartThreadDown(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            Thread thread = new Thread(() => CountDownInRange(numberContainer, globalCancellationToken, globalCancellationTokenSource, start, end, debugMessage));
+//            thread.Start();
+//            return thread;
+//        }
 
 
 
-        //        public static void CountUpInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        //        {
-        //            if (numberContainer.Number != 0)
-        //            {
-        //                return;
-        //            }
+//        public static void CountUpInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
 
-        //            for (int num = start; num <= end; num++)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-        //                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
-        //                {
-        //                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-        //                    lock (globalCancellationTokenSource)
-        //                    {
-        //                        if (numberContainer.Number == 0)
-        //                        {
-        //                            numberContainer.Number = num;
-        //                            globalCancellationTokenSource.Cancel();
-        //                        }
-        //                    }
-        //                    return;
-        //                }
+//            for (int num = start; num <= end; num++)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
 
-        //                Task.Delay(10).Wait();
+//                Task.Delay(10).Wait();
 
-        //                if (globalCancellationToken.IsCancellationRequested)
-        //                {
-        //                    return;
-        //                }
-        //            }
-        //        }
-        //        public static void CountDownInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
-        //        {
-        //            if (numberContainer.Number != 0)
-        //            {
-        //                return;
-        //            }
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+//        public static void CountDownInRange(GuessCaptcha numberContainer, CancellationToken globalCancellationToken, CancellationTokenSource globalCancellationTokenSource, int start, int end, string debugMessage)
+//        {
+//            if (numberContainer.Number != 0)
+//            {
+//                return;
+//            }
 
-        //            for (int num = start; num >= end; num--)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
-        //                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
-        //                {
-        //                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
-        //                    lock (globalCancellationTokenSource)
-        //                    {
-        //                        if (numberContainer.Number == 0)
-        //                        {
-        //                            numberContainer.Number = num;
-        //                            globalCancellationTokenSource.Cancel();
-        //                        }
-        //                    }
-        //                    return;
-        //                }
+//            for (int num = start; num >= end; num--)
+//            {
+//                System.Diagnostics.Debug.WriteLine($" {debugMessage} {num}");
+//                if (_captchaGenerator.Captchas.Any(captcha => int.TryParse(captcha.CaptchaAnswer, out int token) && token == num))
+//                {
+//                    System.Diagnostics.Debug.WriteLine($"{debugMessage} Ended due to matching CaptchaToken!");
+//                    lock (globalCancellationTokenSource)
+//                    {
+//                        if (numberContainer.Number == 0)
+//                        {
+//                            numberContainer.Number = num;
+//                            globalCancellationTokenSource.Cancel();
+//                        }
+//                    }
+//                    return;
+//                }
 
-        //                Task.Delay(10).Wait();
+//                Task.Delay(10).Wait();
 
-        //                if (globalCancellationToken.IsCancellationRequested)
-        //                {
-        //                    return;
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
+//                if (globalCancellationToken.IsCancellationRequested)
+//                {
+//                    return;
+//                }
+//            }
+//        }
+//    }
+//}
 
 
 

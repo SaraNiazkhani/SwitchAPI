@@ -74,6 +74,7 @@ namespace SwitchAPI.Controllers
                 // مطابقت کپچا با تصویر نادرست است
                 return BadRequest("Invalid Captcha. Please try again.");
             }
+
         }
 
         [Route("DownloadFile")]

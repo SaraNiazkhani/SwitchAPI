@@ -28,13 +28,12 @@ namespace SwitchAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            var collection = _mongoContext.GetCollection<Cars>("Brands"); // اینجا باید Car باشد
+            var collection = _mongoContext.GetCollection<Cars>("Brands"); 
             try
             {
-                // این بخش کد برای حذف خودرو با نام برند مشخص است
+               
                 var deleteFilter = Builders<Cars>.Filter.Eq(x => x._id, id);
-                var result = await collection.DeleteOneAsync(deleteFilter); // تغییر این خط
-
+                var result = await collection.DeleteOneAsync(deleteFilter); 
                 if (result.DeletedCount > 0)
                 {
                     return Ok($"خودرو بااین  شناسه با موفقیت حذف شد");

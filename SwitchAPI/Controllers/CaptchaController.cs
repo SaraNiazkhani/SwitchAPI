@@ -30,7 +30,11 @@ namespace SwitchAPI.Controllers
             var randomNumber = new Random().Next(100000, 999999).ToString();
             var imageTxt = sixLaborsCaptcha.Generate(randomNumber);
             var captchaToken = Guid.NewGuid().ToString();
-            var captcha = new CaptchaModels(captchaToken, randomNumber);
+            var captcha = new CaptchaModels(captchaToken, randomNumber)
+            {
+                ExpiryTime = DateTime.Now.AddMinutes(2) 
+            };
+
             var captcharesult = new CaptchaResult()
             {
                 CaptchaImage = imageTxt,
@@ -39,7 +43,7 @@ namespace SwitchAPI.Controllers
             _captchaGenerator.Captchas.Add(captcha);
             return captcharesult;
         }
-
+   
 
 
 

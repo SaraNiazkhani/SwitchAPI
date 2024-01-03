@@ -35,7 +35,12 @@ namespace SwitchAPI.Controllers
         public async Task<IActionResult> UploadFile(IFormFile file, [FromQuery] string CaptchaToken, [FromQuery] string CapcthaAnswer)
         {
             var captcha = _captchaGenerator.Captchas.FirstOrDefault(c => c.CaptchaToken == CaptchaToken);
-            if (captcha != null && CapcthaAnswer == captcha.CaptchaAnswer)
+            if (captcha != null && captcha.ExpiryTime < DateTime.Now)
+            {
+               
+                return BadRequest("Captcha expired. Please request a new one.");
+            }
+            else if (captcha != null && CapcthaAnswer == captcha.CaptchaAnswer)
             {
                 var collection = _mongoContext.GetCollection<FilesModel>("files");
 
@@ -76,6 +81,7 @@ namespace SwitchAPI.Controllers
             }
 
         }
+   
 
         [Route("DownloadFile")]
         [HttpGet]

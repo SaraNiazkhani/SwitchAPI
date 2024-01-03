@@ -6,11 +6,12 @@
         {
             CaptchaToken = captchaToken;
             CaptchaAnswer = captchaAnswer;
-            createCaptchaDate = DateTime.Now;
+            
         }
 
         public string CaptchaToken { get; set; }
         public string CaptchaAnswer { get; set; }
-        public DateTime createCaptchaDate { get; set; }
+         public DateTime ExpiryTime { get; set; }
+        
     }
 }
